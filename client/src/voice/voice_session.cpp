@@ -179,6 +179,12 @@ void VoiceSession::setDevices(int inputDeviceId, int outputDeviceId) {
                    .arg(QString::fromStdString(m_audioEngine.lastError())));
 }
 
+void VoiceSession::setPilotFilterEnabled(bool enabled) {
+    if (enabled)
+        m_pilotFilter.reset(); // clear history to avoid transient pop on enable
+    m_pilotFilterEnabled.store(enabled, std::memory_order_relaxed);
+}
+
 float VoiceSession::inputLevel() const {
     return m_audioEngine.inputLevel();
 }
@@ -406,6 +412,10 @@ void VoiceSession::onPlaybackTimer() {
     } // release channelSettingsMutex
 
     if (hasAudio) {
+        // Apply fighter pilot voice filter (receive path only)
+        if (m_pilotFilterEnabled.load(std::memory_order_relaxed))
+            m_pilotFilter.process(mixed, AudioEngine::FramesPerBuffer);
+
         // Hard clip to [-1, 1]
         for (int i = 0; i < AudioEngine::FramesPerBuffer; ++i) {
             mixed[i] = std::clamp(mixed[i], -1.0f, 1.0f);

@@ -32,6 +32,7 @@ struct VoiceSettings {
     int hotMicChannelId = -1;
     bool duckingEnabled = true;
     float duckLevel = 0.3f; // 30% volume when ducked
+    bool pilotFilterEnabled = false;
 };
 
 struct AudioConfig {

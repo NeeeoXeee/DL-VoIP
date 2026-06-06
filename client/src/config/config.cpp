@@ -101,10 +101,11 @@ QJsonObject AppConfig::userToJson() const {
 
 QJsonObject AppConfig::voiceToJson() const {
     QJsonObject obj;
-    obj["hot_mic_enabled"]    = voice.hotMicEnabled;
-    obj["hot_mic_channel_id"] = voice.hotMicChannelId < 0 ? QJsonValue(QJsonValue::Null) : QJsonValue(voice.hotMicChannelId);
-    obj["ducking_enabled"]    = voice.duckingEnabled;
-    obj["duck_level"]         = static_cast<double>(voice.duckLevel);
+    obj["hot_mic_enabled"]      = voice.hotMicEnabled;
+    obj["hot_mic_channel_id"]   = voice.hotMicChannelId < 0 ? QJsonValue(QJsonValue::Null) : QJsonValue(voice.hotMicChannelId);
+    obj["ducking_enabled"]      = voice.duckingEnabled;
+    obj["duck_level"]           = static_cast<double>(voice.duckLevel);
+    obj["pilot_filter_enabled"] = voice.pilotFilterEnabled;
     return obj;
 }
 
@@ -188,8 +189,9 @@ void AppConfig::voiceFromJson(const QJsonObject& obj) {
     if (obj.contains("hot_mic_enabled"))    voice.hotMicEnabled   = obj["hot_mic_enabled"].toBool(false);
     if (obj.contains("hot_mic_channel_id") && !obj["hot_mic_channel_id"].isNull())
         voice.hotMicChannelId = obj["hot_mic_channel_id"].toInt(-1);
-    if (obj.contains("ducking_enabled"))    voice.duckingEnabled  = obj["ducking_enabled"].toBool(true);
-    if (obj.contains("duck_level"))         voice.duckLevel       = static_cast<float>(obj["duck_level"].toDouble(0.3));
+    if (obj.contains("ducking_enabled"))      voice.duckingEnabled      = obj["ducking_enabled"].toBool(true);
+    if (obj.contains("duck_level"))           voice.duckLevel           = static_cast<float>(obj["duck_level"].toDouble(0.3));
+    if (obj.contains("pilot_filter_enabled")) voice.pilotFilterEnabled  = obj["pilot_filter_enabled"].toBool(false);
 }
 
 void AppConfig::audioFromJson(const QJsonObject& obj) {
