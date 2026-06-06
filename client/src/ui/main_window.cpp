@@ -98,6 +98,7 @@ MainWindow::MainWindow(AppConfig& config, WebSocketClient* wsClient,
     // Load saved per-channel audio settings into voice session
     m_voiceSession.setDuckingEnabled(config.voice.duckingEnabled);
     m_voiceSession.setDuckLevel(config.voice.duckLevel);
+    m_voiceSession.setPilotFilterEnabled(config.voice.pilotFilterEnabled);
     for (auto it = config.channelAudio.constBegin(); it != config.channelAudio.constEnd(); ++it) {
         auto chId = static_cast<uint32_t>(it.key());
         m_voiceSession.setChannelVolume(chId, it.value().volume);

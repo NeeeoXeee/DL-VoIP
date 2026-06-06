@@ -47,6 +47,7 @@ private:
     QWidget* createHotkeyTab();
     QWidget* createChannelAudioTab();
     QWidget* createNetworkTab();
+    QWidget* createVoiceFiltersTab();
     void loadFromConfig();
     void saveToConfig();
     void loadHotkeyTable();
@@ -90,4 +91,7 @@ private:
 
     // Network tab
     QCheckBox* m_useTls;
+
+    // Voice Filters tab
+    QCheckBox* m_pilotFilterEnabled = nullptr;
 };

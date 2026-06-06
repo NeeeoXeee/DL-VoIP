@@ -13,6 +13,7 @@
 
 #include "audio/audio_engine.h"
 #include "audio/opus_codec.h"
+#include "audio/pilot_filter.h"
 #include "crypto/srtp_session.h"
 #include "voice/voice_packet.h"
 #include "voice/jitter_buffer.h"
@@ -75,6 +76,10 @@ public:
     /// channels are reduced to duckLevel (0.0–1.0, default 0.3 = 30%).
     void setDuckingEnabled(bool enabled) { m_duckingEnabled.store(enabled, std::memory_order_relaxed); }
     void setDuckLevel(float level) { m_duckLevel.store(level, std::memory_order_relaxed); }
+
+    /// Fighter pilot voice filter — applied to incoming (receive) audio only.
+    void setPilotFilterEnabled(bool enabled);
+    bool pilotFilterEnabled() const { return m_pilotFilterEnabled.load(std::memory_order_relaxed); }
 
     /// Audio levels for VU meters.
     float inputLevel() const;
@@ -139,6 +144,10 @@ private:
     // Ducking
     std::atomic<bool> m_duckingEnabled{true};
     std::atomic<float> m_duckLevel{0.3f}; // reduce ducked channels to 30%
+
+    // Pilot filter (receive path only) — accessed only from playback timer (main thread)
+    std::atomic<bool> m_pilotFilterEnabled{false};
+    PilotFilter m_pilotFilter;
 
     // Playback mixing timer
     QTimer m_playbackTimer;

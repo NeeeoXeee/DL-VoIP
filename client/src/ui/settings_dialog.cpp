@@ -40,6 +40,7 @@ void SettingsDialog::setupUi() {
     m_tabs->addTab(createHotkeyTab(), "Hotkeys");
     m_tabs->addTab(createChannelAudioTab(), "Channel Audio");
     m_tabs->addTab(createNetworkTab(), "Network");
+    m_tabs->addTab(createVoiceFiltersTab(), "Voice Filters");
     mainLayout->addWidget(m_tabs);
 
     auto* buttons = new QDialogButtonBox(
@@ -407,6 +408,50 @@ QWidget* SettingsDialog::createNetworkTab() {
     return widget;
 }
 
+QWidget* SettingsDialog::createVoiceFiltersTab() {
+    auto* widget = new QWidget(this);
+    auto* layout = new QVBoxLayout(widget);
+
+    auto* info = new QLabel(
+        "Voice filters are applied to incoming remote audio only. "
+        "Your own microphone is never processed.", this);
+    info->setWordWrap(true);
+    info->setStyleSheet("padding: 4px; color: #ccc;");
+    layout->addWidget(info);
+
+    auto* group = new QGroupBox("Radio Voice Effects", this);
+    auto* groupLayout = new QVBoxLayout(group);
+
+    m_pilotFilterEnabled = new QCheckBox("Pilot Voice Filter", this);
+    m_pilotFilterEnabled->setToolTip(
+        "Simulates a military fighter-pilot oxygen-mask radio:\n"
+        "• Bandpass 400 Hz – 2500 Hz (narrow military radio response)\n"
+        "• +4 dB resonance peak at 550 Hz (oxygen-mask acoustics)\n"
+        "• Mild harmonic saturation (analog radio warmth)\n"
+        "• 5:1 compressor, –24 dB threshold (tames loud speech without pumping noise)");
+    groupLayout->addWidget(m_pilotFilterEnabled);
+
+    auto* filterInfo = new QLabel(
+        "Adds a realistic oxygen-mask bandpass, subtle analog saturation, "
+        "and a gentle compressor to keep voices clear and consistently levelled.", this);
+    filterInfo->setWordWrap(true);
+    filterInfo->setStyleSheet("color: gray; font-size: 10px; padding-left: 20px;");
+    groupLayout->addWidget(filterInfo);
+
+    layout->addWidget(group);
+    layout->addStretch();
+
+    // Wire up immediate live toggle (no Apply needed for on/off)
+    connect(m_pilotFilterEnabled, &QCheckBox::toggled, this, [this](bool checked) {
+        m_config.voice.pilotFilterEnabled = checked;
+        if (m_voiceSession)
+            m_voiceSession->setPilotFilterEnabled(checked);
+        m_config.save();
+    });
+
+    return widget;
+}
+
 void SettingsDialog::loadFromConfig() {
     // Audio
     int inputIdx = m_inputDevice->findData(m_config.audio.inputDeviceId);
@@ -435,6 +480,9 @@ void SettingsDialog::loadFromConfig() {
     loadChannelAudioTable();
     if (m_duckingEnabled) m_duckingEnabled->setChecked(m_config.voice.duckingEnabled);
     if (m_duckLevel) m_duckLevel->setValue(static_cast<int>(m_config.voice.duckLevel * 100));
+
+    // Voice Filters
+    if (m_pilotFilterEnabled) m_pilotFilterEnabled->setChecked(m_config.voice.pilotFilterEnabled);
 }
 
 void SettingsDialog::loadHotkeyTable() {
@@ -500,6 +548,14 @@ void SettingsDialog::saveToConfig() {
     if (m_voiceSession) {
         m_voiceSession->setDuckingEnabled(m_config.voice.duckingEnabled);
         m_voiceSession->setDuckLevel(m_config.voice.duckLevel);
+    }
+
+    // Voice filters — pilot filter is applied live via checkbox signal,
+    // but sync here too so Apply/OK also commits the state.
+    if (m_pilotFilterEnabled) {
+        m_config.voice.pilotFilterEnabled = m_pilotFilterEnabled->isChecked();
+        if (m_voiceSession)
+            m_voiceSession->setPilotFilterEnabled(m_config.voice.pilotFilterEnabled);
     }
 
     // Channel audio is saved immediately when sliders/spinboxes change

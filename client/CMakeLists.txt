@@ -60,6 +60,7 @@ set(HEADERS
     src/audio/ring_buffer.h
     src/audio/audio_engine.h
     src/audio/opus_codec.h
+    src/audio/pilot_filter.h
     src/voice/voice_packet.h
     src/voice/jitter_buffer.h
     src/voice/voice_session.h
